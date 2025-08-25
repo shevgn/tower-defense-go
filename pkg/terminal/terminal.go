@@ -8,21 +8,37 @@ import (
 	"golang.org/x/term"
 )
 
-const (
-	CtrlC = "\x03"
-)
-
 // Terminal represents a terminal
 type Terminal struct {
 	state *term.State
 
 	width  int
 	height int
+
+	cursor *Cursor
 }
 
-// NewTerminal creates a new terminal
-func NewTerminal() *Terminal {
-	return &Terminal{}
+// Default sets the terminal width and height from os.Stdout.Fd()
+func Default() *Terminal {
+	fd := int(os.Stdout.Fd())
+
+	if !term.IsTerminal(fd) {
+		println("Not a terminal")
+		os.Exit(1)
+	}
+
+	width, height, err := term.GetSize(fd)
+	if err != nil {
+		panic("Error getting terminal size")
+	}
+
+	terminal := Terminal{
+		width:  width,
+		height: height,
+		cursor: NewCursor(),
+	}
+
+	return &terminal
 }
 
 // Width returns the terminal width
@@ -40,27 +56,9 @@ func (t *Terminal) Size() (int, int) {
 	return t.width, t.height
 }
 
-// Default sets the terminal width and height from os.Stdout.Fd()
-func (t *Terminal) Default() {
-	fd := int(os.Stdout.Fd())
-
-	t.FromFD(fd)
-}
-
-// FromFD gets the terminal size from the file descriptor
-func (t *Terminal) FromFD(fd int) {
-	if !term.IsTerminal(fd) {
-		println("Not a terminal")
-		os.Exit(1)
-	}
-
-	width, height, err := term.GetSize(fd)
-	if err != nil {
-		panic("Error getting terminal size")
-	}
-
-	t.width = width
-	t.height = height
+// Cursor returns the terminal cursor
+func (t *Terminal) Cursor() *Cursor {
+	return t.cursor
 }
 
 // RawMode enables raw mode for the terminal
@@ -80,4 +78,66 @@ func (t *Terminal) Restore() {
 // Clear clears the terminal screen
 func (t *Terminal) Clear() {
 	fmt.Print("\033[H\033[2J")
+}
+
+// DrawRect draws a rectangle on the terminal
+//
+// x and y are the top left corner coordinates.
+// width and height are the dimensions of the rectangle.
+// The rectangle is filled if the fill parameter is true.
+func (t *Terminal) DrawRect(x, y, width, height int, fill bool) {
+	t.cursor.MoveTo(x, y)
+
+	for i := range height {
+		for j := range width {
+
+			borderType, ok := t.borderAt(j, i, width, height)
+			if ok {
+				t.cursor.PrintAt(x+j, y+i, string(borderType))
+				continue
+			}
+
+			if fill {
+				t.cursor.PrintAt(x+j, y+i, "#")
+				continue
+			}
+		}
+	}
+}
+
+func (t *Terminal) borderAt(x, y, width, height int) (BorderType, bool) {
+	// TopLeft
+	if x == 0 && y == 0 {
+		return BorderRoundedTopLeft, true
+	}
+	// TopRight
+	if y == 0 && x == width-1 {
+		return BorderRoundedTopRight, true
+	}
+	// BottomLeft
+	if y == height-1 && x == 0 {
+		return BorderRoundedBottomLeft, true
+	}
+	// BottomRight
+	if y == height-1 && x == width-1 {
+		return BorderRoundedBottomRight, true
+	}
+	// Top
+	if y == 0 {
+		return BorderTop, true
+	}
+	// Bottom
+	if y == height-1 {
+		return BorderBottom, true
+	}
+	// Left
+	if x == 0 {
+		return BorderLeft, true
+	}
+	// Right
+	if x == width-1 {
+		return BorderRight, true
+	}
+
+	return "", false
 }
