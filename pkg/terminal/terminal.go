@@ -8,11 +8,12 @@ import (
 	"golang.org/x/term"
 )
 
+const (
+	CtrlC = "\x03"
+)
+
 // Terminal represents a terminal
 type Terminal struct {
-	posX int
-	posY int
-
 	state *term.State
 
 	width  int
@@ -32,6 +33,11 @@ func (t *Terminal) Width() int {
 // Height returns the terminal height
 func (t *Terminal) Height() int {
 	return t.height
+}
+
+// Size returns the terminal size
+func (t *Terminal) Size() (int, int) {
+	return t.width, t.height
 }
 
 // Default sets the terminal width and height from os.Stdout.Fd()
@@ -59,9 +65,7 @@ func (t *Terminal) FromFD(fd int) {
 
 // RawMode enables raw mode for the terminal
 func (t *Terminal) RawMode() {
-	fd := int(os.Stdout.Fd())
-
-	prevState, err := term.MakeRaw(fd)
+	prevState, err := term.MakeRaw(int(os.Stdout.Fd()))
 	if err != nil {
 		panic("Error getting terminal state")
 	}
@@ -70,18 +74,10 @@ func (t *Terminal) RawMode() {
 
 // Restore restores the terminal to its previous state
 func (t *Terminal) Restore() {
-	fd := int(os.Stdout.Fd())
-	_ = term.Restore(fd, t.state)
+	_ = term.Restore(int(os.Stdout.Fd()), t.state)
 }
 
 // Clear clears the terminal screen
 func (t *Terminal) Clear() {
 	fmt.Print("\033[H\033[2J")
-}
-
-// MoveTo moves the cursor to the specified position
-func (t *Terminal) MoveTo(x, y int) {
-	t.posX = x - 1
-	t.posY = y - 1
-	fmt.Printf("\x1B[%d;%dH", t.posY, t.posX)
 }
