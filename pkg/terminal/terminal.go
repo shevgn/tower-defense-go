@@ -105,6 +105,13 @@ func (t *Terminal) DrawRect(x, y, width, height int, fill bool) {
 	}
 }
 
+// DrawBox draws a box on the terminal
+//
+// DrawBox actually calls [terminal.DrawRect] under the hood but with width twice the height
+func (t *Terminal) DrawBox(x, y, side int, fill bool) {
+	t.DrawRect(x, y, side*2, side, fill)
+}
+
 func (t *Terminal) borderAt(x, y, width, height int) (BorderType, bool) {
 	// TopLeft
 	if x == 0 && y == 0 {
