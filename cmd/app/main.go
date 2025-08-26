@@ -8,77 +8,65 @@ import (
 	"tower-defense-go/pkg/terminal"
 )
 
-var _ = []rune{
-	'#', '#', '#', '#', '#', '#', '#', '#', '#', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#',
-	'#', '#', '#', '#', '#', '#', '#', '#', '#', '#',
+func Typewriter(msg string, delay time.Duration) {
+	for _, char := range msg {
+		fmt.Printf("%c", char)
+
+		if char == ' ' || char == '\n' {
+			time.Sleep(delay * 3)
+			continue
+		}
+
+		time.Sleep(delay)
+	}
 }
 
 func main() {
-	terminal := terminal.NewTerminal()
-	terminal.Default()
-	terminal.RawMode()
-	defer terminal.Restore()
-	terminal.Clear()
+	trm := terminal.Default()
+	trm.RawMode()
+	defer trm.Restore()
+	trm.Clear()
+
+	renderer := trm.Renderer()
+	cursor := trm.Cursor()
 
 	msg := "Welcome to the game!"
-	terminal.MoveTo(terminal.Width()/2-len(msg)/2, terminal.Height()/2)
-	fmt.Print(msg)
+	cursor.MoveTo(trm.Width()/2-len(msg)/2, trm.Height()/2)
+	Typewriter(msg, time.Millisecond*75)
+	time.Sleep(time.Millisecond * 1000)
+	trm.Clear()
 
-	// 	reader := bufio.NewReader(os.Stdin)
-	// 	for {
-	// 		fmt.Print("> ")
-	// 		text, _, _ := reader.ReadRune()
-	// 		fmt.Println(text)
+	// cursor.PrintAt(1, 1, "Hello")
+	renderer.DrawRect(1, 1, 4, 4, false)
+
+	time.Sleep(time.Millisecond * 1000)
+
+	trm.Clear()
+
+	renderer.DrawBox(1, 1, 4, false)
+
+	renderer.DrawLineH(1, 10, 4)
+
+	renderer.DrawLineV(30, 10, 4)
+	renderer.DrawLineV(31, 10, 4)
+	renderer.DrawLineV(32, 10, 4)
+
+	// b := make([]byte, 1)
+	// for {
+	// 	n, err := os.Stdin.Read(b)
+	// 	if err != nil {
+	// 		log.Fatalf("Error reading from stdin: %v", err)
 	// 	}
+	// 	if n > 0 {
+	// 		char := string(b[0])
+	// 		fmt.Printf("You pressed: %s\n", char)
+	// 		if char == "\x03" {
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	time.Sleep(time.Millisecond * 2000)
 
-	terminal.Clear()
-}
-
-type Game struct {
-	Width  int
-	Height int
-}
-
-func NewGame(width, height int) *Game {
-	return &Game{
-		Width:  width,
-		Height: height,
-	}
-}
-
-func (g *Game) Run() {
-	for i := range g.Height {
-		for j := range g.Width {
-			time.Sleep(time.Millisecond * 1)
-
-			if i == 0 || i == g.Height-1 {
-				fmt.Print("#")
-				continue
-			}
-			if j == 0 || j == g.Width-1 {
-				fmt.Print("#")
-				continue
-			}
-
-			fmt.Printf(" ")
-
-			_ = i
-			_ = j
-		}
-	}
-}
-
-func (g *Game) Update() {
+	trm.Clear()
 }
