@@ -4,6 +4,7 @@ package terminal
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"golang.org/x/term"
 )
@@ -16,18 +17,23 @@ type Terminal struct {
 	height int
 
 	renderer *Renderer
+
+	// fd used for MakeRaw/Restore (stdin)
+	fd int
+	mu sync.Mutex
 }
 
 // Default sets the terminal width and height from os.Stdout.Fd()
 func Default() *Terminal {
-	fd := int(os.Stdout.Fd())
+	inFd := int(os.Stdin.Fd())
+	outFd := int(os.Stdout.Fd())
 
-	if !term.IsTerminal(fd) {
-		println("Not a terminal")
+	if !term.IsTerminal(inFd) || !term.IsTerminal(outFd) {
+		fmt.Fprintln(os.Stderr, "Not a terminal")
 		os.Exit(1)
 	}
 
-	width, height, err := term.GetSize(fd)
+	width, height, err := term.GetSize(outFd)
 	if err != nil {
 		panic("Error getting terminal size")
 	}
@@ -38,49 +44,60 @@ func Default() *Terminal {
 		renderer: NewRenderer(),
 	}
 
+	terminal.renderer.SetSize(width, height)
+
 	return &terminal
 }
 
 // Width returns the terminal width
-func (t *Terminal) Width() int {
-	return t.width
-}
+func (t *Terminal) Width() int { return t.width }
 
 // Height returns the terminal height
-func (t *Terminal) Height() int {
-	return t.height
-}
+func (t *Terminal) Height() int { return t.height }
 
 // Size returns the terminal size
-func (t *Terminal) Size() (int, int) {
-	return t.width, t.height
-}
+func (t *Terminal) Size() (int, int) { return t.width, t.height }
 
 // Cursor returns the terminal cursor
-func (t *Terminal) Cursor() *Cursor {
-	return t.renderer.Cursor()
-}
+func (t *Terminal) Cursor() *Cursor { return t.renderer.Cursor() }
 
 // Renderer returns the terminal renderer
-func (t *Terminal) Renderer() *Renderer {
-	return t.renderer
-}
+func (t *Terminal) Renderer() *Renderer { return t.renderer }
 
 // RawMode enables raw mode for the terminal
-func (t *Terminal) RawMode() {
-	prevState, err := term.MakeRaw(int(os.Stdout.Fd()))
-	if err != nil {
-		panic("Error getting terminal state")
+func (t *Terminal) RawMode() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.fd == 0 {
+		t.fd = int(os.Stdin.Fd())
 	}
+	prevState, err := term.MakeRaw(t.fd)
+	if err != nil {
+		return err
+	}
+
 	t.state = prevState
+	return nil
 }
 
 // Restore restores the terminal to its previous state
-func (t *Terminal) Restore() {
-	_ = term.Restore(int(os.Stdout.Fd()), t.state)
+func (t *Terminal) Restore() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.state == nil {
+		return nil
+	}
+	err := term.Restore(t.fd, t.state)
+	t.state = nil
+	return err
 }
 
 // Clear clears the terminal screen
 func (t *Terminal) Clear() {
-	fmt.Print("\033[H\033[2J")
+	// fmt.Print("\033[H\033[2J")
+
+	// CSI 2 J = clear, CSI H move to home
+	fmt.Print("\x1b[2J\x1b[H")
 }

@@ -1,6 +1,10 @@
 package terminal
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"strings"
+)
 
 // Renderer represents a renderer
 type Renderer struct {
@@ -8,6 +12,9 @@ type Renderer struct {
 
 	currentColor Color
 	resetColor   Color
+
+	termWidth  int
+	termHeight int
 }
 
 // NewRenderer creates a new renderer
@@ -17,6 +24,12 @@ func NewRenderer() *Renderer {
 		currentColor: ColorReset,
 		resetColor:   ColorReset,
 	}
+}
+
+// SetSize sets the renderer size
+func (r *Renderer) SetSize(width, height int) {
+	r.termWidth = width
+	r.termHeight = height
 }
 
 // SetColor sets the current color
@@ -47,22 +60,28 @@ func (r *Renderer) Cursor() *Cursor {
 // width and height are the dimensions of the rectangle.
 // The rectangle is filled if the fill parameter is true.
 func (r *Renderer) DrawRect(x, y, width, height int, fill bool) {
-	r.cursor.MoveTo(x, y)
+	if width <= 0 || height <= 0 {
+		log.Printf("Width and height must be greater than 0")
+		return
+	}
 
-	for i := range height {
-		for j := range width {
+	for yi := range height {
+		var sb strings.Builder
 
-			borderType, ok := r.borderAt(j, i, width, height)
-			if ok {
-				r.cursor.PrintRuneAt(x+j, y+i, rune(borderType))
+		for xi := range width {
+			if ch, ok := r.borderAt(xi, yi, width, height); ok {
+				sb.WriteRune(ch)
 				continue
 			}
 
 			if fill {
-				r.cursor.PrintRuneAt(x+j, y+i, '#')
-				continue
+				sb.WriteRune('#')
+			} else {
+				sb.WriteRune(' ')
 			}
 		}
+
+		r.cursor.PrintAt(x, y+yi, sb.String())
 	}
 }
 
@@ -75,11 +94,14 @@ func (r *Renderer) DrawBox(x, y, side int, fill bool) {
 
 // DrawLineH draws a horizontal line on the terminal
 func (r *Renderer) DrawLineH(x, y, length int) {
-	r.cursor.MoveTo(x, y)
-
-	for i := range length {
-		r.cursor.PrintRuneAt(x+i, y, rune(BorderHorizontal))
+	if length <= 0 {
+		return
 	}
+	var sb strings.Builder
+	for range length {
+		sb.WriteRune(BorderHorizontal)
+	}
+	r.cursor.PrintAt(x, y, sb.String())
 }
 
 // DrawLineV draws a vertical line on the terminal
@@ -91,7 +113,7 @@ func (r *Renderer) DrawLineV(x, y, length int) {
 	}
 }
 
-func (r *Renderer) borderAt(x, y, width, height int) (borderType, bool) {
+func (r *Renderer) borderAt(x, y, width, height int) (rune, bool) {
 	// TopLeft
 	if x == 0 && y == 0 {
 		return BorderRoundedTopLeft, true

@@ -2,74 +2,101 @@ package terminal
 
 import (
 	"fmt"
+	"sync"
+	"unicode/utf8"
 )
 
-// Cursor represents a cursor
+// Cursor stores 0-based coordinates internally.
 type Cursor struct {
-	x int
-	y int
+	mu sync.Mutex
+	x  int
+	y  int
 }
 
-// NewCursor creates a new cursor
+// NewCursor creates cursor at (0,0).
 func NewCursor() *Cursor {
 	return &Cursor{}
 }
 
-// MoveTo moves the cursor to the specified position
-func (t *Cursor) MoveTo(x, y int) {
-	t.x = x + 1
-	t.y = y + 1
-	fmt.Printf("\x1B[%d;%dH", t.y, t.x)
+// MoveTo moves cursor to 0-based (x,y) and emits escape sequence.
+func (c *Cursor) MoveTo(x, y int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	c.x = x
+	c.y = y
+	fmt.Printf("\x1B[%d;%dH", c.y+1, c.x+1)
 }
 
-// Print prints a message at the current cursor position
-func (t *Cursor) Print(msg string) {
-	t.MoveTo(t.x, t.y)
+// Print prints message at current cursor position and advances cursor.
+func (c *Cursor) Print(msg string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	fmt.Printf("\x1b[%d;%dH", c.y+1, c.x+1)
 	fmt.Print(msg)
-
-	t.MoveTo(t.x+len(msg), t.y)
+	c.x += utf8.RuneCountInString(msg)
 }
 
-// PrintAt prints a message at the specified position
-func (t *Cursor) PrintAt(x, y int, msg string) {
-	t.MoveTo(x, y)
+// PrintAt prints message at (x,y) (0-based) - optimized: single MoveTo then print.
+func (c *Cursor) PrintAt(x, y int, msg string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	c.x = x
+	c.y = y
+	fmt.Printf("\x1b[%d;%dH", c.y+1, c.x+1)
 	fmt.Print(msg)
-
-	t.MoveTo(t.x+len(msg), t.y)
+	c.x += utf8.RuneCountInString(msg)
 }
 
-// PrintRuneAt prints a rune at the specified position
-func (t *Cursor) PrintRuneAt(x, y int, r rune) {
-	t.MoveTo(x, y)
+// PrintRuneAt prints single rune at (x,y) and advances cursor by 1.
+func (c *Cursor) PrintRuneAt(x, y int, r rune) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	c.x = x
+	c.y = y
+	fmt.Printf("\x1b[%d;%dH", c.y+1, c.x+1)
 	fmt.Printf("%c", r)
+	c.x++
 }
 
 // Reset resets the cursor to the top left corner
 //
 // It is equivalent to calling MoveTo(0, 0)
-func (t *Cursor) Reset() {
-	t.MoveTo(0, 0)
+func (c *Cursor) Reset() {
+	c.MoveTo(0, 0)
 }
 
-// TopLeft moves the cursor to the top left corner
-func (t *Cursor) TopLeft() {
-	t.MoveTo(0, 0)
-}
+// TopLeft moves cursor to top left corner
+//
+// It is equivalent to calling MoveTo(0, 0)
+func (c *Cursor) TopLeft() { c.MoveTo(0, 0) }
 
-// TopRight moves the cursor to the top right corner
-func (t *Cursor) TopRight() {
-	t.MoveTo(t.x, 0)
-}
+// TopRight moves cursor to top right corner
+func (c *Cursor) TopRight() { /* to implement we need terminal width */ }
 
-// BottomRight moves the cursor to the bottom right corner
-func (t *Cursor) BottomRight() {
-	t.MoveTo(t.x, t.y)
-}
+// BottomRight moves cursor to bottom right corner
+func (c *Cursor) BottomRight() { /* to implement we need terminal width */ }
 
-// BottomLeft moves the cursor to the bottom left corner
-func (t *Cursor) BottomLeft() {
-	t.MoveTo(0, t.y)
-}
+// BottomLeft moves cursor to bottom left corner
+func (c *Cursor) BottomLeft() { /* to implement we need terminal height */ }
