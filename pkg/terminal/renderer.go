@@ -17,6 +17,18 @@ type Renderer struct {
 	termHeight int
 }
 
+type Rect struct {
+	X, Y, Width, Height int
+}
+
+type Box struct {
+	X, Y, Side int
+}
+
+type Line struct {
+	X, Y, Length int
+}
+
 // NewRenderer creates a new renderer
 func NewRenderer() *Renderer {
 	return &Renderer{
