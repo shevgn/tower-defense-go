@@ -1,6 +1,8 @@
 package terminal
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Cursor represents a cursor
 type Cursor struct {
@@ -34,6 +36,15 @@ func (t *Cursor) PrintAt(x, y int, msg string) {
 	t.MoveTo(x, y)
 
 	fmt.Print(msg)
+
+	t.MoveTo(t.x+len(msg), t.y)
+}
+
+// PrintRuneAt prints a rune at the specified position
+func (t *Cursor) PrintRuneAt(x, y int, r rune) {
+	t.MoveTo(x, y)
+
+	fmt.Printf("%c", r)
 }
 
 // Reset resets the cursor to the top left corner
