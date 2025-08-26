@@ -36,20 +36,31 @@ func main() {
 	time.Sleep(time.Millisecond * 1000)
 	trm.Clear()
 
-	// cursor.PrintAt(1, 1, "Hello")
-	renderer.DrawRect(1, 1, 4, 4, false)
-
+	renderer.DrawRect(1, 1, 20, 20, false)
 	time.Sleep(time.Millisecond * 1000)
-
 	trm.Clear()
 
-	renderer.DrawBox(1, 1, 4, false)
+	renderer.SetColor(terminal.ColorGreen)
+	renderer.DrawRect(1, 1, 60, 30, false)
+	renderer.ResetColor()
+	time.Sleep(time.Millisecond * 1000)
+	trm.Clear()
 
-	renderer.DrawLineH(1, 10, 4)
+	renderer.SetColor(terminal.ColorRed)
+	renderer.DrawBox(1, 1, 20, false)
+	renderer.ResetColor()
+	time.Sleep(time.Millisecond * 1000)
+	trm.Clear()
 
-	renderer.DrawLineV(30, 10, 4)
-	renderer.DrawLineV(31, 10, 4)
-	renderer.DrawLineV(32, 10, 4)
+	renderer.DrawLineH(1, 15, 10)
+	renderer.DrawLineV(30, 15, 10)
+	renderer.DrawLineV(31, 15, 10)
+	renderer.DrawLineV(32, 15, 10)
+	renderer.DrawLineV(33, 15, 10)
+	renderer.DrawLineV(34, 15, 10)
+	renderer.SetColor(terminal.ColorYellow)
+	renderer.DrawLineH(20, 20, 20)
+	renderer.ResetColor()
 
 	// b := make([]byte, 1)
 	// for {
