@@ -18,6 +18,7 @@ func CenterX(screenWidth int, msg string) int {
 	return x
 }
 
+// Typewriter prints the given message with a typewriter effect
 func Typewriter(ctx context.Context, w *os.File, msg string, delay time.Duration) <-chan struct{} {
 	done := make(chan struct{})
 	go func() {
