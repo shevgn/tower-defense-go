@@ -22,23 +22,20 @@ func Typewriter(ctx context.Context, w *os.File, msg string, delay time.Duration
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		for _, r := range msg { // ітеруємо по рунам
+		for _, r := range msg {
 			select {
 			case <-ctx.Done():
 				return
 			default:
 			}
 
-			// друкуємо руну
 			fmt.Fprintf(w, "%c", r)
 
-			// довший пауз для пробілів/нового рядка
 			sleep := delay
 			if r == ' ' || r == '\n' {
 				sleep = delay * 3
 			}
 
-			// чутливий sleep з можливістю переривання
 			t := time.NewTimer(sleep)
 			select {
 			case <-ctx.Done():
