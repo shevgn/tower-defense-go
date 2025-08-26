@@ -15,7 +15,7 @@ type Terminal struct {
 	width  int
 	height int
 
-	cursor *Cursor
+	renderer *Renderer
 }
 
 // Default sets the terminal width and height from os.Stdout.Fd()
@@ -33,9 +33,9 @@ func Default() *Terminal {
 	}
 
 	terminal := Terminal{
-		width:  width,
-		height: height,
-		cursor: NewCursor(),
+		width:    width,
+		height:   height,
+		renderer: NewRenderer(),
 	}
 
 	return &terminal
@@ -58,7 +58,12 @@ func (t *Terminal) Size() (int, int) {
 
 // Cursor returns the terminal cursor
 func (t *Terminal) Cursor() *Cursor {
-	return t.cursor
+	return t.renderer.Cursor()
+}
+
+// Renderer returns the terminal renderer
+func (t *Terminal) Renderer() *Renderer {
+	return t.renderer
 }
 
 // RawMode enables raw mode for the terminal
@@ -78,73 +83,4 @@ func (t *Terminal) Restore() {
 // Clear clears the terminal screen
 func (t *Terminal) Clear() {
 	fmt.Print("\033[H\033[2J")
-}
-
-// DrawRect draws a rectangle on the terminal
-//
-// x and y are the top left corner coordinates.
-// width and height are the dimensions of the rectangle.
-// The rectangle is filled if the fill parameter is true.
-func (t *Terminal) DrawRect(x, y, width, height int, fill bool) {
-	t.cursor.MoveTo(x, y)
-
-	for i := range height {
-		for j := range width {
-
-			borderType, ok := t.borderAt(j, i, width, height)
-			if ok {
-				t.cursor.PrintAt(x+j, y+i, string(borderType))
-				continue
-			}
-
-			if fill {
-				t.cursor.PrintAt(x+j, y+i, "#")
-				continue
-			}
-		}
-	}
-}
-
-// DrawBox draws a box on the terminal
-//
-// DrawBox actually calls [terminal.DrawRect] under the hood but with width twice the height
-func (t *Terminal) DrawBox(x, y, side int, fill bool) {
-	t.DrawRect(x, y, side*2, side, fill)
-}
-
-func (t *Terminal) borderAt(x, y, width, height int) (BorderType, bool) {
-	// TopLeft
-	if x == 0 && y == 0 {
-		return BorderRoundedTopLeft, true
-	}
-	// TopRight
-	if y == 0 && x == width-1 {
-		return BorderRoundedTopRight, true
-	}
-	// BottomLeft
-	if y == height-1 && x == 0 {
-		return BorderRoundedBottomLeft, true
-	}
-	// BottomRight
-	if y == height-1 && x == width-1 {
-		return BorderRoundedBottomRight, true
-	}
-	// Top
-	if y == 0 {
-		return BorderTop, true
-	}
-	// Bottom
-	if y == height-1 {
-		return BorderBottom, true
-	}
-	// Left
-	if x == 0 {
-		return BorderLeft, true
-	}
-	// Right
-	if x == width-1 {
-		return BorderRight, true
-	}
-
-	return "", false
 }
