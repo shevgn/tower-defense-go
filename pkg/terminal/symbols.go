@@ -1,31 +1,31 @@
 package terminal
 
-type BorderType string
+type borderType rune
 
 const (
-	BorderTopLeft     BorderType = "┌"
-	BorderTop         BorderType = "─"
-	BorderTopRight    BorderType = "┐"
-	BorderRight       BorderType = "│"
-	BorderBottomRight BorderType = "┘"
-	BorderBottom      BorderType = "─"
-	BorderBottomLeft  BorderType = "└"
-	BorderLeft        BorderType = "│"
-	BorderVertical    BorderType = "│"
-	BorderHorizontal  BorderType = "─"
+	BorderTopLeft     borderType = '┌'
+	BorderTop         borderType = '─'
+	BorderTopRight    borderType = '┐'
+	BorderRight       borderType = '│'
+	BorderBottomRight borderType = '┘'
+	BorderBottom      borderType = '─'
+	BorderBottomLeft  borderType = '└'
+	BorderLeft        borderType = '│'
+	BorderVertical    borderType = '│'
+	BorderHorizontal  borderType = '─'
 
-	BorderRoundedTopLeft     BorderType = "╭"
-	BorderRoundedBottomLeft  BorderType = "╰"
-	BorderRoundedTopRight    BorderType = "╮"
-	BorderRoundedBottomRight BorderType = "╯"
+	BorderRoundedTopLeft     borderType = '╭'
+	BorderRoundedBottomLeft  borderType = '╰'
+	BorderRoundedTopRight    borderType = '╮'
+	BorderRoundedBottomRight borderType = '╯'
 
-	BoxDrawingHeavyVertical   BorderType = "┃"
-	BoxDrawingHeavyHorizontal BorderType = "━"
-	BoxDrawingHeavyCross      BorderType = "┿"
+	BoxDrawingHeavyVertical   borderType = '┃'
+	BoxDrawingHeavyHorizontal borderType = '━'
+	BoxDrawingHeavyCross      borderType = '┿'
 
-	Cross BorderType = "┼"
+	Cross borderType = '┼'
 
-	BoxDrawingLightVertical   BorderType = "│"
-	BoxDrawingLightHorizontal BorderType = "─"
-	BoxDrawingLightCross      BorderType = "┼"
+	BoxDrawingLightVertical   borderType = '│'
+	BoxDrawingLightHorizontal borderType = '─'
+	BoxDrawingLightCross      borderType = '┼'
 )
