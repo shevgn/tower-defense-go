@@ -38,8 +38,19 @@ func (b *Buffer) Index(x, y int) int {
 	return x + y*b.W
 }
 
-// Set sets the character at (x,y) to ch
-func (b *Buffer) Set(x, y int, ch rune) {
+// Set sets the cell at (x,y) to cell
+func (b *Buffer) Set(x, y int, cell Cell) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if x < 0 || x >= b.W || y < 0 || y >= b.H {
+		return
+	}
+	b.Cells[b.Index(x, y)] = cell
+}
+
+// SetCh sets the character at (x,y) to ch
+func (b *Buffer) SetCh(x, y int, ch rune) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -58,6 +69,13 @@ func (b *Buffer) Get(x, y int) *Cell {
 		return nil
 	}
 	return &b.Cells[b.Index(x, y)]
+}
+
+// GetCh returns the character at (x,y)
+//
+// It is equivalent to calling Get(x,y).Ch
+func (b *Buffer) GetCh(x, y int) rune {
+	return b.Get(x, y).Ch
 }
 
 // Fill fills the buffer with ch
